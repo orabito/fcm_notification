@@ -39,20 +39,18 @@ class MyHomePage extends StatelessWidget {
           padding: const EdgeInsets.all(18.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-
             children: [
               Container(
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(166),
                     color: Colors.tealAccent),
                 child: ListTile(
-                  onTap: ()  {
+                  onTap: () {
                     LocalService.showBasicNotification();
                   },
                   trailing: IconButton(
                       onPressed: () {
                         LocalService.cancelNotification(0);
-
                       },
                       icon: const Icon(Icons.cancel_outlined)),
                   title: const Text("Flutter Notification"),
@@ -68,7 +66,7 @@ class MyHomePage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(166),
                     color: Colors.tealAccent),
                 child: ListTile(
-                  onTap: ()  {
+                  onTap: () {
                     LocalService.showRepeatedNotification();
                   },
                   trailing: IconButton(
@@ -76,11 +74,52 @@ class MyHomePage extends StatelessWidget {
                         LocalService.cancelNotification(1);
                       },
                       icon: const Icon(Icons.cancel_outlined)),
-                    title: const Text("Repeated Flutter Notification"),
+                  title: const Text("Repeated Flutter Notification"),
                   leading: const Icon(
                       color: Colors.amber, Icons.notifications_active),
                 ),
-              )
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Container(
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(166),
+                    color: Colors.tealAccent),
+                child: ListTile(
+                  onTap: () {
+                    LocalService.showScheduleNotification();
+                  },
+                  trailing: IconButton(
+                      onPressed: () {
+                        LocalService.cancelNotification(2);
+                      },
+                      icon: const Icon(Icons.cancel_outlined)),
+                  title: const Text("schedule Flutter Notification"),
+                  leading: const Icon(
+                      color: Colors.amber, Icons.notifications_active),
+                ),
+              ),
+            const  SizedBox(
+                height: 20,
+              ),
+              ElevatedButton(
+                  
+                  style:ElevatedButton.styleFrom(
+                    backgroundColor:  Colors.tealAccent
+                  ) ,
+                  onPressed: () {
+                LocalService.  cancelAllNotification();
+              }, child:const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("cancel all"),
+                  SizedBox(
+                    height: 15  ,
+                  ),
+                   Icon(Icons.close),
+                ],
+              ))
             ],
           ),
         ));

@@ -30,7 +30,9 @@ android {
     compileSdk 35
     ndkVersion "25.1.8937393"
     //and here
-
+    aaptOptions {
+        noCompress 'mp3'
+    }
     compileOptions {
         coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_11
