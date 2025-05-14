@@ -27,7 +27,7 @@ class LocalService {
     description: 'This channel is used for repeated notifications.', // Channel description
     importance: Importance.high, // High priority (not heads-up)
     playSound: true,
-    sound: UriAndroidNotificationSound('assets/sound/soundfor.mp3'), // Custom sound from assets
+    sound: UriAndroidNotificationSound('assets/sound/sondfor.mp3'), // Custom sound from assets
   );
 
   static Future<void> init() async {
@@ -120,7 +120,7 @@ class LocalService {
       channelDescription: 'This channel is used for repeated notifications.',
       importance: Importance.high,
       priority: Priority.high,
-      sound: UriAndroidNotificationSound('assets/sound/soundfor.mp3'), // Full asset path
+      sound: UriAndroidNotificationSound('assets/sound/sondfor.mp3'), // Full asset path
       playSound: true,
     );
 
