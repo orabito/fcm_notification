@@ -142,6 +142,7 @@ class LocalService {
       RepeatInterval.everyMinute, // Repeat interval
       details,
       payload: 'notification_payload',
+      ///
     );
   }
 
