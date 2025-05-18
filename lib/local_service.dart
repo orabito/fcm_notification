@@ -1,37 +1,50 @@
+// Import Dart's developer tools for logging
+import 'dart:async';
 import 'dart:developer';
+// Import Flutter's material design components
 import 'package:flutter/material.dart';
+// Import local notifications package
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// Import timezone handling package
 import 'package:flutter_timezone/flutter_timezone.dart';
+// Import timezone database initialization
 import 'package:timezone/data/latest.dart' as tz;
+// Import timezone location handling
 import 'package:timezone/timezone.dart' as tz;
 
 class LocalService {
-  // Initialize notifications plugin instance
+  static   StreamController<NotificationResponse> streamController = StreamController();
+ static onTap (NotificationResponse response){
+   // log(response.id.toString());
+   // log(response.payload.toString());
+   streamController.add(response);
+ }
+  // Initialize the notifications plugin instance
   static FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
 
-  // Main notification channel (high importance)
+  // Main notification channel configuration (high priority)
   static const AndroidNotificationChannel _mainChannel = AndroidNotificationChannel(
-    'high_importance_channel', // Unique channel ID
-    'High Importance Notifications', // User-visible name
+    'high_importance_channel', // Unique channel identifier
+    'High Importance Notifications', // User-visible channel name
     description: 'This channel is used for important notifications.', // Channel description
-    importance: Importance.max, // Maximum priority (heads-up notifications)
-    playSound: true,
-    sound: RawResourceAndroidNotificationSound('sound2'), // Default sound from Android raw resources
+    importance: Importance.max, // Maximum notification priority (heads-up display)
+    playSound: true, // Enable sound for this channel
+    sound: RawResourceAndroidNotificationSound('sound2'), // Android sound resource from raw folder
   );
 
   // Dedicated channel for repeated notifications
   static const AndroidNotificationChannel _repeatedChannel = AndroidNotificationChannel(
-    'repeated_channel', // Unique channel ID
-    'Repeated Notifications', // User-visible name
+    'repeated_channel', // Unique channel identifier
+    'Repeated Notifications', // User-visible channel name
     description: 'This channel is used for repeated notifications.', // Channel description
     importance: Importance.high, // High priority (not heads-up)
-    playSound: true,
-    sound: UriAndroidNotificationSound('assets/sound/sondfor.mp3'), // Custom sound from assets
+    playSound: true, // Enable sound for this channel
+    sound: RawResourceAndroidNotificationSound('sondfor'), // Sound resource (potential typo in name)
   );
 
   static Future<void> init() async {
-    // Clean up existing channels to avoid conflicts
+    // Clean up existing notification channels to prevent conflicts
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.deleteNotificationChannel(_mainChannel.id);
@@ -40,27 +53,27 @@ class LocalService {
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.deleteNotificationChannel(_repeatedChannel.id);
 
-    // Request notification permissions (Android 13+)
+    // Request notification permissions on Android 13+ devices
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
 
-    // Platform-specific initialization settings
+    // Configure platform-specific initialization settings
     const InitializationSettings settings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'), // App icon for notifications
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'), // Default app icon for notifications
       iOS: DarwinInitializationSettings(
-        requestAlertPermission: true, // Request alert permission (iOS)
-        requestBadgePermission: true, // Request badge permission (iOS)
-        requestSoundPermission: true, // Request sound permission (iOS)
+        requestAlertPermission: true, // Request display permission on iOS
+        requestBadgePermission: true, // Request app badge modification permission
+        requestSoundPermission: true, // Request sound playback permission
       ),
     );
 
-    // Initialize notifications plugin
+    // Initialize the notifications plugin with settings
     await flutterLocalNotificationsPlugin.initialize(
       settings,
-      onDidReceiveNotificationResponse: (response) {
-        log('Notification tapped!'); // Handle notification taps
-      },
+      onDidReceiveNotificationResponse: onTap,
+      onDidReceiveBackgroundNotificationResponse:onTap,
+
     );
 
     // Create Android notification channels
@@ -73,121 +86,126 @@ class LocalService {
         ?.createNotificationChannel(_repeatedChannel);
   }
 
-  // Basic notification with default sound
+  // Display a basic notification with default sound
   static Future<void> showBasicNotification() async {
+    // Android-specific configuration
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'high_importance_channel', // Channel ID to use
+      'High Importance Notifications', // Channel name
+      channelDescription: 'This channel is used for important notifications.', // Channel description
+      importance: Importance.max, // Maximum priority
+      priority: Priority.high, // High priority level
+      sound: RawResourceAndroidNotificationSound("sound2"), // Sound resource
+      playSound: true, // Enable sound playback
+      enableVibration: true, // Enable vibration
+      color: Colors.blue, // Notification accent color
+      ledColor: Colors.red, // LED indicator color
+      ledOnMs: 1000, // LED on duration in milliseconds
+      ledOffMs: 500, // LED off duration in milliseconds
+
+    );
+
+    // Platform-independent notification configuration
+    const NotificationDetails details = NotificationDetails(
+      android: androidDetails, // Android-specific settings
+      iOS: DarwinNotificationDetails(
+        presentAlert: true, // Show alert on iOS
+        presentBadge: true, // Update app badge
+        presentSound: true, // Play sound on iOS
+        sound: 'sound2.caf', // iOS sound file (Core Audio Format)
+      ),
+    );
+
+    // Display the notification
+    await flutterLocalNotificationsPlugin.show(
+      0, // Unique notification ID
+      'Hello!', // Notification title
+      'This is a notification from Flutter', // Notification body
+      details, // Notification configuration
+      payload: 'notification_payload', // Optional data payload
+
+    );
+  }
+
+  // Display a recurring notification with custom sound
+  static Future<void> showRepeatedNotification() async {
+    // Android-specific configuration
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'repeated_channel', // Channel ID for repeated notifications
+      'Repeated Notifications', // Channel name
+
+      channelDescription: 'This channel is used for repeated notifications.', // Channel description
+      importance: Importance.high, // Notification priority
+      priority: Priority.high, // System priority level
+      sound: UriAndroidNotificationSound('sondfor'), // Potential issue: Should use RawResource instead
+      playSound: true, // Enable sound playback
+    );
+
+    // Platform-independent configuration
+    const NotificationDetails details = NotificationDetails(
+      android: androidDetails, // Android settings
+      iOS: DarwinNotificationDetails(
+        presentAlert: true, // Show iOS alert
+        presentBadge: true, // Update app badge
+        presentSound: true, // Enable sound
+        sound: 'soundfor.caf', // Potential typo mismatch with 'sondfor'
+      ),
+    );
+
+    // Schedule recurring notification
+    await flutterLocalNotificationsPlugin.periodicallyShow(
+      1, // Unique notification ID
+      'Hello , this is Repeated', // Title
+      'This is a Repeated notification from Flutter', // Body
+      RepeatInterval.everyMinute, // Repeat every 60 seconds
+      details, // Notification settings
+      payload: 'notification_payload Repeated', // Data payload
+    );
+  }
+
+  // Schedule a one-time notification
+  static Future<void> showScheduleNotification() async {
+    // Initialize timezone database
+    tz.initializeTimeZones();
+
+    // Get device's local timezone
+    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(currentTimeZone));
+
+    // Schedule notification 10 seconds from now
+    final scheduledTime = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10));
+
     // Android-specific configuration
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'high_importance_channel', // Channel ID
       'High Importance Notifications', // Channel name
       channelDescription: 'This channel is used for important notifications.',
-      importance: Importance.max,
-      priority: Priority.high,
-      sound: RawResourceAndroidNotificationSound("sound2"), // Default sound
-      playSound: true,
-      enableVibration: true,
-      color: Colors.blue, // Accent color
-      ledColor: Colors.red, // LED color
-      ledOnMs: 1000, // LED on duration (milliseconds)
-      ledOffMs: 500, // LED off duration (milliseconds)
+      importance: Importance.max, // Maximum priority
+      sound: RawResourceAndroidNotificationSound("sound2"), // Sound resource
+      playSound: true, // Enable sound
     );
 
-    // Platform-agnostic notification details
+    // Platform-independent configuration
     const NotificationDetails details = NotificationDetails(
-      android: androidDetails,
+      android: androidDetails, // Android settings
       iOS: DarwinNotificationDetails(
-        presentAlert: true, // Show alert (iOS)
-        presentBadge: true, // Update badge (iOS)
-        presentSound: true, // Play sound (iOS)
-        sound: 'sound2.caf', // iOS sound file name (CAF format)
+        presentAlert: true, // Show iOS alert
+        presentBadge: true, // Update badge
+        presentSound: true, // Play sound
+        sound: 'sound2.caf', // iOS sound file
       ),
     );
 
-    await flutterLocalNotificationsPlugin.show(
-      0, // Notification ID
-      'Hello!', // Title
-      'This is a notification from Flutter', // Body
-      details,
-      payload: 'notification_payload', // Optional payload
-    );
-  }
-
-  // Repeating notification with custom sound
-  static Future<void> showRepeatedNotification() async {
-    // Android-specific configuration for repeated notifications
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'repeated_channel', // Correct channel ID
-      'Repeated Notifications',
-      channelDescription: 'This channel is used for repeated notifications.',
-      importance: Importance.high,
-      priority: Priority.high,
-      sound: UriAndroidNotificationSound('assets/sound/sondfor.mp3'), // Full asset path
-      playSound: true,
-    );
-
-    // Platform-agnostic notification details
-    const NotificationDetails details = NotificationDetails(
-      android: androidDetails,
-      iOS: DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-        sound: 'soundfor.caf', // iOS sound file (converted to CAF format)
-      ),
-    );
-
-    await flutterLocalNotificationsPlugin.periodicallyShow(
-      1, // Notification ID
-      'Hello , this is Repeated', // Title
-      'This is a Repeated notification from Flutter', // Body
-      RepeatInterval.everyMinute, // Repeat interval
-      details,
-      payload: 'notification_payload',
-//jpojpijpi
-    );
-  }
-
-  // Scheduled notification with default sound
-  static Future<void> showScheduleNotification() async {
-    // Initialize timezone database
-    tz.initializeTimeZones();
-
-    // Get device timezone
-    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(currentTimeZone));
-
-    // Schedule after 10 seconds (for testing)
-    final scheduledTime = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10));
-
-    // Android-specific configuration
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'high_importance_channel',
-      'High Importance Notifications',
-      channelDescription: 'This channel is used for important notifications.',
-      importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound("sound2"), // Default sound
-      playSound: true,
-    );
-
-    // Platform-agnostic notification details
-    const NotificationDetails details = NotificationDetails(
-      android: androidDetails,
-      iOS: DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-        sound: 'sound2.caf', // iOS sound file name
-      ),
-    );
-
+    // Schedule timezone-aware notification
     await flutterLocalNotificationsPlugin.zonedSchedule(
-      2, // Notification ID
+      2, // Unique notification ID
       'Hello , this is schedule', // Title
       'This is a schedule notification from Flutter', // Body
-      scheduledTime, // Scheduled time
-      details,
-      payload: 'notification_payload',
+      scheduledTime, // Scheduled delivery time
+      details, // Notification settings
+      payload: 'notification_payload', // Data payload
       uiLocalNotificationDateInterpretation:
-      UILocalNotificationDateInterpretation.absoluteTime, // iOS time handling
+      UILocalNotificationDateInterpretation.absoluteTime, // iOS time handling mode
     );
   }
 
@@ -196,7 +214,7 @@ class LocalService {
     await flutterLocalNotificationsPlugin.cancel(id);
   }
 
-  // Cancel all notifications
+  // Cancel all active notifications
   static Future<void> cancelAllNotification() async {
     await flutterLocalNotificationsPlugin.cancelAll();
   }

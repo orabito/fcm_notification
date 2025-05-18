@@ -1,9 +1,22 @@
+import 'dart:developer';
+
 import 'package:fcm_notification/local_service.dart';
+import 'package:fcm_notification/notification_details.dart';
+import 'package:fcm_notification/work_manager_service.dart';
 import 'package:flutter/material.dart';
+import 'package:workmanager/workmanager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LocalService.init();
+
+  Future.wait([
+    LocalService.init(),
+    WorkManagerService().init(),
+  ]);
+  ///i can handel by this way to handel performance
+ //  await LocalService.init();
+ // await WorkManagerService().init();
+
 
   runApp(const MyApp());
 }
@@ -11,7 +24,6 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -25,8 +37,31 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    listenToNotification();
+  }
+
+  void listenToNotification() {
+    LocalService.streamController.stream.listen((response) {
+      log(response.id.toString());
+      log(response.payload.toString());
+      Navigator.push(context, MaterialPageRoute(
+        builder: (context) => NotificationDetailsScreen(response: response),
+      ));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,26 +135,25 @@ class MyHomePage extends StatelessWidget {
                       color: Colors.amber, Icons.notifications_active),
                 ),
               ),
-            const  SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               ElevatedButton(
-                  
-                  style:ElevatedButton.styleFrom(
-                    backgroundColor:  Colors.tealAccent
-                  ) ,
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.tealAccent),
                   onPressed: () {
-                LocalService.  cancelAllNotification();
-              }, child:const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text("cancel all"),
-                  SizedBox(
-                    height: 15  ,
-                  ),
-                   Icon(Icons.close),
-                ],
-              ))
+                    LocalService.cancelAllNotification();
+                  },
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("cancel all"),
+                      SizedBox(
+                        height: 15,
+                      ),
+                      Icon(Icons.close),
+                    ],
+                  ))
             ],
           ),
         ));

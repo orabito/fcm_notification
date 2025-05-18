@@ -20,6 +20,7 @@ version: 1.0.0+1
 
 environment:
   sdk: '>=3.0.6 <4.0.0'
+  flutter: '>=3.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -39,6 +40,7 @@ dependencies:
   timezone:
 
   flutter_timezone:
+  workmanager: ^0.5.0
 
 dev_dependencies:
   flutter_test:
